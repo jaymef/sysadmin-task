@@ -19,12 +19,12 @@ file `.env.example` for the variable names that should be set.
 
 Database
 --------
-A PostgreSQL database dump is in `data/`. Please load this dump into a PostgreSQL
-database.
+A PostgreSQL database dump is in `data/`. Please load this dump into a
+PostgreSQL database.
 
-The PHP application is configured to connect to a database named `Blog` 
-with the user `blog` and password `blog` on the server `localhost`. You may 
-change the database address to wherever the PostgreSQL server is hosted.
+The PHP application uses environment variables to configure the database
+connection. see `.env.example` for the connection variables that are used.
+You may set the environment values to whatever you need to get up and running.
 
 Web Server
 ----------
