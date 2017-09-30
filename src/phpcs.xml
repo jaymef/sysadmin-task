@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="app">
+  <arg name="colors" />
+  <arg name="tab-width" value="4" />
+  <arg name="extensions" value="php" />
+  <arg name="encoding" value="utf-8" />
+  <arg name="warning-severity" value="0" />
+  <arg value="p" /><!-- show progress -->
+
+  <file>./</file>
+  <exclude-pattern>/vendor/*</exclude-pattern>
+
+
+  <rule ref="PSR2" />
+</ruleset>
