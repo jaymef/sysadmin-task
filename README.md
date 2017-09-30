@@ -14,6 +14,8 @@ PHP Application
 We have provided a simple PHP application that talks to a small PostgreSQL
 database. The PHP application is found in `src/`. The PHP application has
 dependencies that must be installed with PHP's `composer` package manager.
+The PHP application uses environment variables for configuration. See the
+file `.env.example` for the variable names that should be set.
 
 Database
 --------
