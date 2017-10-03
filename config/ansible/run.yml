@@ -1,0 +1,21 @@
+---
+- hosts: webservers
+  pre_tasks:
+       - name: copy easy apache json build profile
+         copy: src=/etc/ansible/cpanel_initial_install_ea4_profile.json dest=/etc/cpanel_initial_install_ea4_profile.json
+       - name: install git via yum
+         yum: name=git state=latest
+       - name: install cPanel with custom apache build profile
+         shell: cd /home && curl -o latest -L https://securedownloads.cpanel.net/latest && sh latest
+       - name: setup user account
+         shell: yes | /scripts/wwwacct test2.sotest.net sotest Ad90cMVfaCVX2
+       - name: install Postgres
+         shell: yes | /scripts/installpostgres
+       - name: install nginx
+         shell: cd /; /usr/bin/wget --no-check-certificate https://raw.githubusercontent.com/engintron/engintron/master/engintron.sh; /bin/bash /engintron.sh install
+       - name: adjust php values
+         shell: /usr/bin/sed -i '/allow_url_fopen/c\allow_url_fopen = On' /opt/cpanel/ea-php56/root/etc/php.ini
+       - name: install composer
+         shell: cd /root; /usr/bin/wget https://getcomposer.org/installer; chmod +x ./installer; php ./installer; mv ./composer.phar /usr/local/bin/composer
+       - name: flush default iptables rules
+         shell: iptables -F
