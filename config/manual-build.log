@@ -1,0 +1,105 @@
+#add limited user for security purposes
+	
+	useradd sotest && passwd sotest
+	usermod -aG wheel sotest
+
+#flush default centOS iptables rules (add back in own custom rules later)
+	iptables -F
+
+	su - sotest
+
+#disable direct root login via SSH and restart sshd 
+	sudo vi /etc/ssh/sshd_config
+	PermitRootLogin no
+	sudo service sshd restart
+
+#perform system update before we begin
+	sudo yum -y update
+
+##### NGINX #####
+=================
+
+#add nginx repo for latest version
+	sudo vi /etc/yum.repos.d/nginx.repo
+
+	[nginx]
+	name=nginx repo
+	baseurl=http://nginx.org/packages/centos/7/$basearch/
+	gpgcheck=0
+	enabled=1
+
+		sudo yum -y install nginx
+		sudo systemctl enable nginx
+		sudo systemctl start nginx
+
+##### POSTGRESQL #####
+============================
+
+	sudo yum -y install https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
+	sudo yum -y install postgresql96 postgresql96-server postgresql96-contrib
+	sudo /usr/pgsql-9.6/bin/postgresql96-setup initdb
+	sudo systemctl enable postgresql-9.6
+	sudo systemctl start postgresql-9.6
+		
+	sudo -u postgres createuser blog
+	sudo -u postgres createdb blog
+	
+	su - postgres
+
+	#change master postgres password for security
+        ALTER USER postgres with encrypted password 'Da90fMAAcAs013';
+	ALTER USER blog with encrypted password 'blog';
+	\c blog
+	GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO blog;
+	* edit /var/lib/pgsql/9.6/data/pg_hba.conf and change host auth method to md5
+	
+
+##### GIT INSTALL #####
+=======================
+
+#setup IUS repo to gain access to newer release of GIT and PHP) 
+	su root
+	curl 'https://setup.ius.io/' -o setup-ius.sh ; bash setup-ius.sh
+	su - sotest
+	sudo yum -y install git2u
+
+###### PHP ######
+
+#install PHP 7.1x and some additional extensions + PHP-FPM for nginx
+	sudo yum -y install php71u php71u-cli php71u-json php71u-simplexml php71u-fpm-nginx php71u-pgsql
+
+	
+##### LETS ENCRYPT SSL SETUP #####
+==================================
+
+	sudo yum -y install yum-utils
+	sudo yum-config-manager --enable rhui-REGION-rhel-server-extras rhui-REGION-rhel-server-optional
+	sudo yum install certbot-nginx
+	sudo certbot --nginx
+
+	* setup document root for /home/sotest/www
+
+##### COMPOSER ######
+=====================
+	su - sotest
+	
+	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+	php -r "if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+	php composer-setup.php
+	php -r "unlink('composer-setup.php');"
+	sudo mv composer.phar /usr/local/bin/composer
+
+##### GIT ######
+
+#forked repo to https://github.com/jaymef/sysadmin-task
+	su - sotest
+	git config --global user.name "jaymef"
+	git config --global user.email "jaymef@gmailcom"
+	git clone https://github.com/jaymef/sysadmin-task
+	cd ~sotest/sysadmin-task/src ; composer install
+
+##### MISC NOTES/HARDENING #####
+	- Import sql dump.  su - postgres && psql blog <database.sql
+	- Prevent information disclosure, NGIX banner, PHP expose.  Force HTTPS, other nginx hardning for x-site scripting etc.
+        - iptables rules to allow inbound to only ssh and web ports
+
